@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake Reel Scanner</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e1116;
+      --panel: #171b22;
+      --panel-2: #202632;
+      --text: #f5f7fb;
+      --muted: #98a2b3;
+      --line: #2b3340;
+      --blue: #5b8cff;
+      --green: #35d07f;
+      --orange: #ffb454;
+      --red: #ff6673;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 32px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .status-pill,
+    .badge,
+    .state {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .status-pill {
+      color: var(--muted);
+      padding: 8px 12px;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-panel {
+      padding: 20px;
+      position: sticky;
+      top: 20px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #11161f;
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    button {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--blue);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .result-panel {
+      min-height: 560px;
+      overflow: hidden;
+    }
+
+    .empty,
+    .loading,
+    .error {
+      min-height: 560px;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .error {
+      color: var(--red);
+    }
+
+    .result-header {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-2);
+    }
+
+    .score-ring {
+      width: 118px;
+      height: 118px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        conic-gradient(var(--score-color) calc(var(--score) * 1%), #313844 0),
+        #313844;
+    }
+
+    .score-inner {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--panel-2);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .result-title {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .result-title h2 {
+      font-size: 26px;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .meta {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .content {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .section-title {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      margin-bottom: 10px;
+    }
+
+    .stats-grid,
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat,
+    .social-card,
+    .factor,
+    .recommendation,
+    .link-row {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .stat {
+      padding: 14px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .profile-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .profile-box strong {
+      color: var(--text);
+    }
+
+    .social-card {
+      padding: 14px;
+    }
+
+    .social-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .social-name {
+      font-weight: 800;
+    }
+
+    .state {
+      font-size: 12px;
+      padding: 5px 8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .state.found {
+      color: var(--green);
+      border-color: rgba(53, 208, 127, 0.35);
+    }
+
+    .state.not-found {
+      color: var(--red);
+      border-color: rgba(255, 102, 115, 0.35);
+    }
+
+    .state.unknown,
+    .state.blocked,
+    .state.probable {
+      color: var(--orange);
+      border-color: rgba(255, 180, 84, 0.35);
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    .reason {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+
+    .factor-list,
+    .recommendations,
+    .links-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .factor,
+    .recommendation,
+    .link-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      color: var(--text);
+    }
+
+    .recommendation,
+    .link-row {
+      justify-content: flex-start;
+      line-height: 1.4;
+    }
+
+    .points {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .positive .points {
+      color: var(--green);
+    }
+
+    .negative .points {
+      color: var(--red);
+    }
+
+    .neutral .points {
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      header,
+      .layout {
+        display: block;
+      }
+
+      .status-pill {
+        display: inline-block;
+        margin-top: 14px;
+      }
+
+      .form-panel {
+        position: static;
+        margin-bottom: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 20px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .stats-grid,
+      .social-grid,
+      .result-header {
+        grid-template-columns: 1fr;
+      }
+
+      .score-ring {
+        width: 104px;
+        height: 104px;
+      }
+
+      .score-inner {
+        width: 76px;
+        height: 76px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Fake Reel Scanner</h1>
+        <p class="subtitle">Recherche automatique depuis un profil social.</p>
+      </div>
+      <div class="status-pill" id="apiStatus">API locale</div>
+    </header>
+
+    <div class="layout">
+      <form class="panel form-panel" id="scannerForm">
+        <div class="field">
+          <label for="displayName">Nom du compte</label>
+          <input id="displayName" name="displayName" type="text" placeholder="Gaby" autocomplete="off" required>
+        </div>
+
+        <div class="field">
+          <label for="username">Pseudo</label>
+          <input id="username" name="username" type="text" placeholder="@gabbybunnyy" autocomplete="off" required>
+        </div>
+
+        <div class="field">
+          <label for="platform">Reseau de depart</label>
+          <select id="platform" name="platform" required>
+            <option value="tiktok">TikTok</option>
+            <option value="instagram">Instagram</option>
+            <option value="x">X</option>
+            <option value="youtube">YouTube</option>
+          </select>
+        </div>
+
+        <button type="submit" id="submitButton">Analyser</button>
+      </form>
+
+      <section class="panel result-panel" id="result">
+        <div class="empty">Renseigne un profil pour lancer l'analyse.</div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("scannerForm");
+    const result = document.getElementById("result");
+    const submitButton = document.getElementById("submitButton");
+    const apiStatus = document.getElementById("apiStatus");
+
+    const stateLabels = {
+      found: "Trouve",
+      probable: "Probable",
+      not_found: "Absent",
+      blocked: "Bloque",
+      unknown: "Inconnu",
+      error: "Erreur"
+    };
+
+    const platformLabels = {
+      instagram: "Instagram",
+      x: "X",
+      tiktok: "TikTok",
+      youtube: "YouTube"
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return "Non detecte";
+      return new Intl.NumberFormat("fr-FR").format(value);
+    }
+
+    function formatDate(value) {
+      if (!value) return "Non detectee";
+      return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(value));
+    }
+
+    function getScoreColor(score) {
+      if (score >= 75) return "#35d07f";
+      if (score >= 50) return "#ffb454";
+      if (score >= 30) return "#ffb454";
+      return "#ff6673";
+    }
+
+    function renderLoading() {
+      result.innerHTML = '<div class="loading">Analyse en cours. Les plateformes peuvent prendre quelques secondes a repondre.</div>';
+    }
+
+    function renderError(message) {
+      result.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    }
+
+    function renderSocialCard(social, primaryPlatform) {
+      const statusClass = social.status === "not_found" ? "not-found" : social.status;
+      const label = stateLabels[social.status] || social.status;
+      const title = social.signals?.profile?.displayName || social.signals?.title || "";
+      const isPrimary = social.platform === primaryPlatform ? " · depart" : "";
+      const cached = social.cached ? " · cache" : "";
+
+      return `
+        <article class="social-card">
+          <div class="social-top">
+            <span class="social-name">${escapeHtml(social.label)}${isPrimary}</span>
+            <span class="state ${escapeHtml(statusClass)}">${escapeHtml(label)}</span>
+          </div>
+          <a href="${escapeHtml(social.url)}" target="_blank" rel="noreferrer">${escapeHtml(social.url)}</a>
+          <p class="reason">${escapeHtml(social.reason)}${cached}</p>
+          ${title ? `<p class="reason">${escapeHtml(title)}</p>` : ""}
+        </article>
+      `;
+    }
+
+    function renderFactor(factor) {
+      const points = factor.points > 0 ? `+${factor.points}` : String(factor.points);
+      return `
+        <div class="factor ${escapeHtml(factor.type)}">
+          <span>${escapeHtml(factor.label)}</span>
+          <span class="points">${escapeHtml(points)}</span>
+        </div>
+      `;
+    }
+
+    function renderLink(url) {
+      return `<div class="link-row"><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a></div>`;
+    }
+
+    function renderResult(data) {
+      const scoreColor = getScoreColor(data.score);
+      const stats = data.profile?.stats || {};
+      const socials = Object.values(data.socials).map((social) => renderSocialCard(social, data.platform)).join("");
+      const factors = data.factors.length
+        ? data.factors.map(renderFactor).join("")
+        : '<div class="factor neutral"><span>Aucun signal fort disponible</span><span class="points">0</span></div>';
+      const recommendations = data.recommendations.length
+        ? data.recommendations.map((item) => `<div class="recommendation">${escapeHtml(item)}</div>`).join("")
+        : '<div class="recommendation">Aucune action prioritaire detectee.</div>';
+      const foundLinks = [
+        ...(data.profile?.linkInBioLinks || []),
+        ...(data.discovered?.socialLinks || []).map((link) => link.url),
+        ...(data.profile?.externalLinks || [])
+      ].filter(Boolean);
+      const links = [...new Set(foundLinks)].slice(0, 10);
+      const linksHtml = links.length
+        ? links.map(renderLink).join("")
+        : '<div class="link-row">Aucun lien public exploitable detecte.</div>';
+      const bio = data.profile?.bio || "Bio non detectee.";
+      const emails = data.profile?.emails?.length ? data.profile.emails.join(", ") : "Non detecte";
+
+      result.innerHTML = `
+        <div class="result-header">
+          <div class="score-ring" style="--score:${data.score}; --score-color:${scoreColor}">
+            <div class="score-inner">${data.score}%</div>
+          </div>
+          <div>
+            <div class="result-title">
+              <h2>@${escapeHtml(data.username)}</h2>
+              <span class="badge">${escapeHtml(data.level)}</span>
+            </div>
+            <p class="meta">
+              ${escapeHtml(data.displayName || "Nom non saisi")} · ${escapeHtml(platformLabels[data.platform] || data.platform)} · confiance ${data.confidence}% · reseaux confirmes ${data.counts.found}/4
+            </p>
+          </div>
+        </div>
+
+        <div class="content">
+          <div>
+            <h3 class="section-title">Profil detecte</h3>
+            <div class="profile-box">
+              <strong>${escapeHtml(data.profile?.displayName || "Nom non detecte")}</strong><br>
+              ${escapeHtml(bio)}
+            </div>
+          </div>
+
+          <div>
+            <h3 class="section-title">Donnees recuperees</h3>
+            <div class="stats-grid">
+              <div class="stat">
+                <div class="stat-label">Followers</div>
+                <div class="stat-value">${escapeHtml(formatNumber(stats.followers))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Likes</div>
+                <div class="stat-value">${escapeHtml(formatNumber(stats.likes))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Publications</div>
+                <div class="stat-value">${escapeHtml(formatNumber(stats.posts))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Derniere activite</div>
+                <div class="stat-value">${escapeHtml(formatDate(data.profile?.latestContentAt))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Email public</div>
+                <div class="stat-value">${escapeHtml(emails)}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Liens trouves</div>
+                <div class="stat-value">${links.length}</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="section-title">Reseaux verifies</h3>
+            <div class="social-grid">${socials}</div>
+          </div>
+
+          <div>
+            <h3 class="section-title">Liens detectes</h3>
+            <div class="links-list">${linksHtml}</div>
+          </div>
+
+          <div>
+            <h3 class="section-title">Facteurs de score</h3>
+            <div class="factor-list">${factors}</div>
+          </div>
+
+          <div>
+            <h3 class="section-title">Actions conseillees</h3>
+            <div class="recommendations">${recommendations}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function checkApiHealth() {
+      try {
+        const response = await fetch("/api/health");
+        apiStatus.textContent = response.ok ? "API connectee" : "API indisponible";
+      } catch (error) {
+        apiStatus.textContent = "API indisponible";
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const displayName = String(formData.get("displayName") || "").trim();
+      const username = String(formData.get("username") || "").trim();
+      const platform = String(formData.get("platform") || "tiktok").trim();
+
+      if (!displayName || !username || !platform) {
+        renderError("Renseigne le nom, le pseudo et le reseau.");
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Analyse...";
+      renderLoading();
+
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            displayName,
+            username,
+            platform
+          })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Analyse impossible.");
+        }
+
+        renderResult(data);
+      } catch (error) {
+        renderError(error.message || "Analyse impossible.");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Analyser";
+      }
+    });
+
+    checkApiHealth();
+  </script>
+</body>
+</html>

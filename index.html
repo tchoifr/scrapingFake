@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analyse Créatrice</title>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#111;
+      color:white;
+      padding:40px;
+    }
+
+    .card{
+      background:#1c1c1c;
+      border-radius:12px;
+      padding:25px;
+      max-width:700px;
+      margin:auto;
+      box-shadow:0 0 20px rgba(0,0,0,0.4);
+    }
+
+    h1{
+      margin-top:0;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      margin-bottom:15px;
+      font-size:16px;
+    }
+
+    button{
+      background:#5865f2;
+      color:white;
+      border:none;
+      padding:12px 20px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
+    }
+
+    button:hover{
+      opacity:0.9;
+    }
+
+    .result{
+      margin-top:25px;
+      padding:20px;
+      background:#262626;
+      border-radius:10px;
+    }
+
+    .score{
+      font-size:40px;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .good{
+      color:#42ff87;
+    }
+
+    .medium{
+      color:#ffb347;
+    }
+
+    .bad{
+      color:#ff5c5c;
+    }
+
+    ul{
+      padding-left:20px;
+    }
+
+    li{
+      margin-bottom:8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <h1>Analyse Fake / Réel Créatrice</h1>
+
+  <input type="text" id="followers" placeholder="Nombre de followers">
+  <input type="text" id="likes" placeholder="Moyenne de likes">
+  <input type="text" id="comments" placeholder="Moyenne de commentaires">
+  <input type="text" id="posts" placeholder="Nombre de posts">
+  <input type="text" id="accountAge" placeholder="Âge du compte (années)">
+  
+  <label>
+    <input type="checkbox" id="email">
+    Email pro visible
+  </label>
+
+  <br><br>
+
+  <label>
+    <input type="checkbox" id="videos">
+    Vidéos naturelles / stories parlées
+  </label>
+
+  <br><br>
+
+  <label>
+    <input type="checkbox" id="multiSocial">
+    Présence sur plusieurs réseaux
+  </label>
+
+  <br><br>
+
+  <button onclick="analyze()">Analyser</button>
+
+  <div class="result" id="result" style="display:none;"></div>
+
+</div>
+
+<script>
+
+function analyze(){
+
+  const followers = parseInt(document.getElementById('followers').value) || 0;
+  const likes = parseInt(document.getElementById('likes').value) || 0;
+  const comments = parseInt(document.getElementById('comments').value) || 0;
+  const posts = parseInt(document.getElementById('posts').value) || 0;
+  const accountAge = parseFloat(document.getElementById('accountAge').value) || 0;
+
+  const email = document.getElementById('email').checked;
+  const videos = document.getElementById('videos').checked;
+  const multiSocial = document.getElementById('multiSocial').checked;
+
+  let score = 0;
+  let messages = [];
+
+  // Engagement rate
+  let engagement = 0;
+
+  if(followers > 0){
+    engagement = ((likes + comments) / followers) * 100;
+  }
+
+  // Followers / engagement
+  if(engagement >= 3){
+    score += 30;
+    messages.push("Excellent engagement");
+  }
+  else if(engagement >= 1){
+    score += 15;
+    messages.push("Engagement correct");
+  }
+  else{
+    messages.push("Engagement faible");
+  }
+
+  // Posts
+  if(posts >= 50){
+    score += 15;
+    messages.push("Compte actif");
+  }
+
+  // Ancienneté
+  if(accountAge >= 2){
+    score += 15;
+    messages.push("Compte ancien");
+  }
+
+  // Email pro
+  if(email){
+    score += 10;
+    messages.push("Email professionnel détecté");
+  }
+
+  // Vidéos naturelles
+  if(videos){
+    score += 20;
+    messages.push("Présence humaine détectée");
+  }
+
+  // Multi réseaux
+  if(multiSocial){
+    score += 10;
+    messages.push("Présence multi plateformes");
+  }
+
+  // Followers incohérents
+  if(followers > 50000 && likes < 300){
+    score -= 30;
+    messages.push("Possible achat de followers");
+  }
+
+  // Limite
+  if(score < 0){
+    score = 0;
+  }
+
+  if(score > 100){
+    score = 100;
+  }
+
+  let level = "";
+  let className = "";
+
+  if(score >= 75){
+    level = "Probablement réel et sérieux";
+    className = "good";
+  }
+  else if(score >= 45){
+    level = "Compte mitigé";
+    className = "medium";
+  }
+  else{
+    level = "Risque élevé de fake / IA";
+    className = "bad";
+  }
+
+  document.getElementById('result').style.display = "block";
+
+  document.getElementById('result').innerHTML = `
+  
+    <div class="score ${className}">
+      ${score}% réel
+    </div>
+
+    <h3>${level}</h3>
+
+    <p>
+      Engagement estimé : ${engagement.toFixed(2)}%
+    </p>
+
+    <ul>
+      ${messages.map(m => `<li>${m}</li>`).join('')}
+    </ul>
+  
+  `;
+}
+
+</script>
+
+</body>
+</html>
