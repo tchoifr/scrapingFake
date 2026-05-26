@@ -34,6 +34,8 @@ Ouvre ensuite `http://localhost:3000`.
 
 ## API
 
+La logique de scan et de score est detaillee dans [docs/SCORING.md](docs/SCORING.md).
+
 ### POST /api/analyze
 
 ```bash
